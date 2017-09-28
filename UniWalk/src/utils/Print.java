@@ -73,8 +73,8 @@ public class Print {
 		BufferedWriter out = new BufferedWriter(new FileWriter(outPath));
 		BufferedWriter outsim = new BufferedWriter(new FileWriter(outPath
 				+ ".sim.txt"));
-//		for (int v = 0; v < sim.length; v++) {
-		for (int v = 0; v < 1000; v++) {	
+		for (int v = 0; v < sim.length; v++) {
+//		for (int v = 0; v < 1000; v++) {	
 //			System.out.println("v = " + v);
 			int size = sim[v].size();
 //			if (size == 0)

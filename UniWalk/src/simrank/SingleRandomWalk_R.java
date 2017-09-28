@@ -18,7 +18,8 @@ import utils.Print;
 public class SingleRandomWalk_R extends SingleRandomWalk {
 	private int[] sampleCount ;
 	protected int STEP = 5;	
-	private int batchSize = 2500;
+//	private int batchSize = 2500;
+	private int batchSize = 40000;
 	private int times = 3;			// path sharing
 	public SingleRandomWalk_R(Graph g, int sample, int Step) {
 		super(g,sample,Step);
@@ -39,7 +40,7 @@ public class SingleRandomWalk_R extends SingleRandomWalk {
 		StopWatch.start();
 		
 		for (int i = 0; i < COUNT; i++){
-			if(i%100==0) System.out.println("i: " + i);
+			if(i%100000==0) System.out.println("i: " + i);
 			if ( i % batchSize == 0){
 				System.out.println("stage "+(i / batchSize)+"\t"+checkFinished());
 			}
@@ -52,6 +53,7 @@ public class SingleRandomWalk_R extends SingleRandomWalk {
 		System.out.println("stage "+(g.getVCount() / batchSize)+"\t"+checkFinished());
 		
 		StopWatch.say("finish");
+		
 	}
 	
 	
@@ -79,9 +81,9 @@ public class SingleRandomWalk_R extends SingleRandomWalk {
 	public static void main(String[] args) throws IOException  {
 		System.out.println("songjs");
 		int fileNum = MyConfiguration.fileNum;
-		fileNum = 1;
+		fileNum = 5;
 		Queue<String> pre_ans = new LinkedList<String>();
-		for(int i=0;i<fileNum;i++){
+		for(int i=4;i<fileNum;i++){
 			// input path
 			String graphInPath = MyConfiguration.in_u_u_graphPath[i];
 			String goldPath = MyConfiguration.out_u_u_graphPath_simrank[i] + "_simrank_navie_top" + MyConfiguration.TOPK +".txt";
@@ -112,13 +114,13 @@ public class SingleRandomWalk_R extends SingleRandomWalk {
 					log.info("u_u_graph singleRandomWalk output done!");
 					String prePath = basePath + "_Single_R_top" + 20 + "_step" + step + "_sample" + sample + "precision.txt";
 					// sim
-					Print.printByOrder(srw.getResult(), outPath, MyConfiguration.TOPK, 20);
-					log.info("printByOrder done!");
+//					Print.printByOrder(srw.getResult(), outPath, MyConfiguration.TOPK, 20);
+//					log.info("printByOrder done!");
 					// precision
-					String pre = Eval.precision(goldPath+".sim.txt", outPath+".sim.txt", prePath, 20);
-					pre_ans.add(pre);
-					System.out.println("pre" + pre);
-					log.info("Basic SingleRamdomWalk_R Top" + MyConfiguration.TOPK + " step" + step + " sample" + sample + " precision: " + pre);
+//					String pre = Eval.precision(goldPath+".sim.txt", outPath+".sim.txt", prePath, 20);
+//					pre_ans.add(pre);
+//					System.out.println("pre" + pre);
+//					log.info("Basic SingleRamdomWalk_R Top" + MyConfiguration.TOPK + " step" + step + " sample" + sample + " precision: " + pre);
 				}
 			}
 			log.close();

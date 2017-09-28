@@ -24,7 +24,8 @@ public class SingleRandomWalk_M {
 	protected Graph g;
 	protected FixedCacheMap[] sim;
 	protected int SAMPLE = 10000;
-	public static double[] cache;  
+	public static double[] cache;
+	public long msg_num = 0;
 	
 	
 	@SuppressWarnings("unchecked")
@@ -32,10 +33,12 @@ public class SingleRandomWalk_M {
 		this.STEP = step;
 		this.g = g;
 		this.COUNT = g.getVCount();
-		sim = new FixedCacheMap[1000];
+		this.msg_num = 0;
+//		sim = new FixedCacheMap[1000];
+		sim = new FixedCacheMap[this.COUNT];
 		capacity = topk * M;
 		SAMPLE = sample;
-		for (int i = 0; i < 1000; i++){
+		for (int i = 0; i < this.COUNT; i++){
 			sim[i] = new FixedCacheMap(capacity);
 		}
 		
@@ -53,13 +56,22 @@ public class SingleRandomWalk_M {
 //			}
 //			walk(i, 2*STEP,0);
 //		}
-		for (int i = 0; i < Math.min(COUNT,1000); i++){
-			if(i%100==0){
-				System.out.println(i);
+		int batchSize = 40000;
+		for (int i = 0; i < Math.min(COUNT,COUNT); i++){
+			if(i%batchSize==0){
+//				System.out.println(i);
+			}
+			if ( i % batchSize == 0){
+//				StopWatch.say("batchSize: " + batchSize + "  ");
+//				System.out.println("msg_num: " + msg_num); 
+				msg_num = 0;
 			}
 			walk(i, 2*STEP,0);
 		}
-		StopWatch.say("finish");
+		
+		System.out.println("msg_num: " + msg_num);
+		StopWatch.say("total count: " + COUNT + "\n");
+		
 	}
 	
 	/**
@@ -70,17 +82,20 @@ public class SingleRandomWalk_M {
 	 */
 	protected void walk(int v, int len, int initSample){
 		int maxStep =Math.max( 2 * STEP , len);
+//		System.out.println("maxStep: " + maxStep);
 		for (int i = initSample; i < SAMPLE; i++) {
-			int pathLen = 0;
-			int[] path = new int[maxStep + 1];
+			int pathLen = 1;
+			int[] path = new int[maxStep+1];
 			Arrays.fill(path, -1);
 			path[0] = v;
 			int cur = v;
-			while (pathLen < maxStep){
+			while (pathLen <= maxStep){
 				cur = g.randNeighbor(cur);
 				if (cur == -1) break;
-				path[++pathLen] = cur;
+				path[pathLen++] = cur;
+				msg_num += 1;
 			}
+//			System.out.println("pathLen: " + pathLen);
 			// compute the sim to v;
 			computePathSim(path, pathLen);			
 		}
@@ -94,7 +109,7 @@ public class SingleRandomWalk_M {
 	 * @param pathLen : the length of the path. 
 	 */
 	protected void computePathSim(int[] path, int pathLen){
-		if (pathLen == 0) return;
+		if (pathLen == 0) {return;}
 		int source = path[0];
 		for (int i = 1 ; i <= STEP && 2 * i <= pathLen; i++){
 			int interNode = path[i];
@@ -102,7 +117,8 @@ public class SingleRandomWalk_M {
 			if (source == target) continue;
 			if (isFirstMeet(path,0, 2*i)){
 				double incre =  cache[i]* g.degree(interNode)/ g.degree(target) / SAMPLE;
-				sim[source].put(target, (float)incre);	
+				sim[source].put(target, (float)incre);
+				msg_num += 1;
 			}
 		}
 	}
@@ -117,6 +133,7 @@ public class SingleRandomWalk_M {
 	 * @param targetIndex
 	 * @return
 	 */
+	// songjs
 	public boolean isFirstMeet(int[] path, int srcIndex, int dstIndex){
 		int internal = (dstIndex - srcIndex) / 2 + srcIndex;
 		for (int i = srcIndex; i < internal; i++){
@@ -127,17 +144,18 @@ public class SingleRandomWalk_M {
 
 	public static void main(String[] args) throws IOException {
 		int fileNum = MyConfiguration.fileNum;
-		fileNum = 2;
+		fileNum = 1;
 		for(int i=0;i<fileNum;i++){
 			// input path
 			String graphInPath = MyConfiguration.in_u_u_graphPath[i];
 			String goldPath = MyConfiguration.out_u_u_graphPath_simrank[i] + "_simrank_navie_top" + MyConfiguration.TOPK +".txt";
-			
+			 
 			// output
 			String basePath = MyConfiguration.out_u_u_graphPath_single[i];
 			String logPath = basePath + "_Single_M_Test.log";
 			
-			int[] samples = {10000};
+//			int[] samples = {50,100, 250, 1000, 2500,5000,10000,20000,40000};
+			int[] samples = {1};
 			int[] steps = {5};
 			
 			Log log = new Log(logPath);
@@ -150,26 +168,31 @@ public class SingleRandomWalk_M {
 				for (int sample : samples){	// 这里step加上之后，路径还要进一步调整
 					
 					StopWatch.start();
-					
-					log.info("computation begin!");
-					StopWatch.say("computation begin!");
-					SingleRandomWalk_M srw = new SingleRandomWalk_M(g,5*1000,sample,step);
+					float acc = 0.0f;
+					for(int a=0;a<10;a++){
+//					log.info("computation begin!");
+//					StopWatch.say("computation begin!");
+					SingleRandomWalk_M srw = new SingleRandomWalk_M(g,5,sample,step);
 					srw.compute();
-					StopWatch.say("computation done!");
-					log.info("computation done!");
+//					StopWatch.say("computation done!");
+//					log.info("computation done!");
 
-					System.out.println("第" + i + "个文件  Step:" + step + " Sample:"+sample + "TopK:" + 20);
-					log.info("第" + i + "个文件  Step:" + step + " Sample:"+sample + "TopK:" + 20);
+//					System.out.println("第" + i + "个文件  Step:" + step + " Sample:"+sample + "TopK:" + 20);
+//					log.info("第" + i + "个文件  Step:" + step + " Sample:"+sample + "TopK:" + 20);
 					String outPath = basePath + "_Single_M_top" + 20 + "_step" + step + "_sample" + sample + ".txt"; 
-					log.info("u_u_graph singleRandomWalk output done!");
+//					log.info("u_u_graph singleRandomWalk output done!");
 					String prePath = basePath + "_Single_M_top" + 20 + "_step" + step + "_sample" + sample + "precision.txt";
 
 					// sim
 					Print.printByOrder(srw.getResult(), outPath, MyConfiguration.TOPK);
-					// precision
-					log.info("printByOrder done!");
+//					// precision
+//					log.info("printByOrder done!");
 					String pre = Eval.precision(goldPath+".sim.txt", outPath+".sim.txt", prePath, 20);
-					log.info("Basic SingleRamdomWalk_M Top" + MyConfiguration.TOPK + " step" + step + " sample" + sample + " precision: " + pre);
+					Float p = new Float(pre);
+					acc += p.floatValue();
+//					log.info("Basic SingleRamdomWalk_M Top" + MyConfiguration.TOPK + " step" + step + " sample" + sample + " precision: " + pre);
+					}
+					System.out.println(sample + "   acc: " + acc/10.0);
 				}
 			}
 			g = null;

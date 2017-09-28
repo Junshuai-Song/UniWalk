@@ -66,7 +66,7 @@ public class SingleWalkVertex extends
 		
 		if (step == 0) {
 			// songjs: only deal some calculation. !!!
-			if((int)this.getId().get() < 20000){
+			if((int)this.getId().get() < 40000){
 				for (int i = 0; i < SAMPLE; i++){
 					IntArrayWritable msg = new IntArrayWritable(MAX_MSG_SLOT + 1);
 					msg.set(0, this.getId().get());			// degree数组0位置，保存初始顶点id(后面用)
